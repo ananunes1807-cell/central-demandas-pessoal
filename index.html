@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1e1e2e" />
+    <meta
+      name="description"
+      content="Central pessoal, leve e offline para demandas de suporte tecnico e infraestrutura."
+    />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon-192.svg" />
+    <link rel="stylesheet" href="/style.css" />
+    <title>Central de Demandas</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Suporte tecnico e infraestrutura</p>
+          <h1>Central de Demandas</h1>
+          <p class="header-text">
+            Um painel leve para registrar, acompanhar e comprovar as demandas do dia.
+          </p>
+        </div>
+
+        <div class="header-actions">
+          <span class="cat-status" aria-label="Assistente felino online">
+            <span aria-hidden="true">🐈</span>
+            online
+          </span>
+          <button class="ghost-button" id="theme-toggle" type="button">
+            Modo claro
+          </button>
+          <span class="total-pill">
+            <strong id="total-demandas">0</strong>
+            demandas
+          </span>
+        </div>
+      </header>
+
+      <section class="quick-create" aria-labelledby="quick-title">
+        <div class="quick-copy">
+          <span class="soft-icon" aria-hidden="true">🐾</span>
+          <h2 id="quick-title">Nova demanda rápida</h2>
+          <p>Anote em segundos. Os detalhes podem vir depois.</p>
+        </div>
+
+        <form class="quick-form" id="quick-form">
+          <input
+            id="quick-title-input"
+            name="titulo"
+            type="text"
+            placeholder="Ex.: Impressora da secretaria não imprime"
+            autocomplete="off"
+            required
+          />
+          <button class="primary-button" type="submit">Adicionar</button>
+        </form>
+      </section>
+
+      <section class="toolbar" aria-label="Busca, filtros e backup">
+        <label class="search-box">
+          Busca rápida
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Titulo, setor, IP, teste, proximo passo..."
+            autocomplete="off"
+          />
+        </label>
+
+        <label>
+          Status
+          <select id="status-filter">
+            <option value="Todas">Todos</option>
+            <option>Caixa de entrada</option>
+            <option>Fazendo agora</option>
+            <option>Aguardando</option>
+            <option>Finalizado</option>
+          </select>
+        </label>
+
+        <label>
+          Categoria
+          <select id="category-filter">
+            <option value="Todas">Todas</option>
+            <option>Rede</option>
+            <option>Wi-Fi</option>
+            <option>Impressora</option>
+            <option>Computador</option>
+            <option>Sistema</option>
+            <option>Laboratorio</option>
+            <option>Sala de Prova</option>
+            <option>Instalacao</option>
+            <option>Manutencao</option>
+            <option>Mobiliario</option>
+            <option>Eletrica</option>
+            <option>Outros</option>
+          </select>
+        </label>
+
+        <label>
+          Prioridade
+          <select id="priority-filter">
+            <option value="Todas">Todas</option>
+            <option>Baixa</option>
+            <option>Média</option>
+            <option>Alta</option>
+            <option>Urgente</option>
+          </select>
+        </label>
+
+        <div class="backup-actions">
+          <button class="ghost-button" id="export-button" type="button">
+            Exportar JSON
+          </button>
+          <label class="ghost-button file-button">
+            Mesclar JSON
+            <input id="merge-input" type="file" accept="application/json,.json" />
+          </label>
+          <label class="ghost-button file-button danger-file">
+            Substituir JSON
+            <input id="replace-input" type="file" accept="application/json,.json" />
+          </label>
+        </div>
+      </section>
+
+      <section class="edit-panel" id="edit-panel" aria-labelledby="edit-title" hidden>
+        <form id="demand-form">
+          <div class="form-header">
+            <div>
+              <p class="eyebrow">Registro da demanda</p>
+              <h2 id="edit-title">Editar demanda</h2>
+            </div>
+            <button class="ghost-button" id="cancel-edit-button" type="button">
+              Fechar
+            </button>
+          </div>
+
+          <div class="form-grid">
+            <label>
+              Título
+              <input id="titulo" name="titulo" type="text" required />
+            </label>
+
+            <label>
+              Setor
+              <input id="setor" name="setor" type="text" placeholder="Ex.: Secretaria" />
+            </label>
+
+            <label>
+              Categoria
+              <select id="categoria" name="categoria">
+                <option>Rede</option>
+                <option>Wi-Fi</option>
+                <option>Impressora</option>
+                <option>Computador</option>
+                <option>Sistema</option>
+                <option>Laboratorio</option>
+                <option>Sala de Prova</option>
+                <option>Instalacao</option>
+                <option>Manutencao</option>
+                <option>Mobiliario</option>
+                <option>Eletrica</option>
+                <option>Outros</option>
+              </select>
+            </label>
+
+            <label>
+              Prioridade
+              <select id="prioridade" name="prioridade">
+                <option>Baixa</option>
+                <option>Média</option>
+                <option>Alta</option>
+                <option>Urgente</option>
+              </select>
+            </label>
+
+            <label>
+              Status
+              <select id="status" name="status">
+                <option>Caixa de entrada</option>
+                <option>Fazendo agora</option>
+                <option>Aguardando</option>
+                <option>Finalizado</option>
+              </select>
+            </label>
+
+            <label>
+              Data da demanda
+              <input id="data" name="data" type="date" />
+            </label>
+          </div>
+
+          <label>
+            Descrição
+            <textarea
+              id="descricao"
+              name="descricao"
+              rows="3"
+              placeholder="Resumo do problema, local, pessoa solicitante ou contexto."
+            ></textarea>
+          </label>
+
+          <div class="form-grid two-columns">
+            <label>
+              Observações técnicas
+              <textarea
+                id="observacoesTecnicas"
+                name="observacoesTecnicas"
+                rows="4"
+                placeholder="IPs, patrimonio, equipamento, rede, sala, porta, cabo..."
+              ></textarea>
+            </label>
+
+            <label>
+              O que já foi feito
+              <textarea
+                id="feito"
+                name="feito"
+                rows="4"
+                placeholder="Testes realizados, soluções tentadas, ajustes e verificações."
+              ></textarea>
+              <span class="field-hint">Use este campo como evidência rápida do atendimento.</span>
+            </label>
+          </div>
+
+          <label>
+            Próximo passo
+            <textarea
+              id="proximoPasso"
+              name="proximoPasso"
+              rows="3"
+              placeholder="O que falta fazer, aguardar ou confirmar."
+            ></textarea>
+          </label>
+
+          <section class="timeline-panel" aria-labelledby="timeline-title">
+            <h3 id="timeline-title">Histórico da demanda</h3>
+            <ol id="timeline-list" class="timeline-list"></ol>
+          </section>
+
+          <div class="form-actions">
+            <button class="primary-button" type="submit">Salvar alterações</button>
+            <button class="ghost-button" id="duplicate-edit-button" type="button">
+              Copiar demanda
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="kanban-board" id="kanban-board" aria-label="Quadro de demandas"></section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <script type="module" src="/script.js"></script>
+  </body>
+</html>

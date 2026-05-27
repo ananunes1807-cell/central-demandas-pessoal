@@ -1,0 +1,23 @@
+{
+  "name": "Central de Demandas",
+  "short_name": "Demandas",
+  "description": "Sistema leve para organizar demandas de trabalho no navegador.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eef5f3",
+  "theme_color": "#86a8a8",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
