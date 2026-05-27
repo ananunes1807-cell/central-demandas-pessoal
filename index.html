@@ -39,24 +39,52 @@
         </div>
       </header>
 
-      <section class="quick-create" aria-labelledby="quick-title">
-        <div class="quick-copy">
-          <span class="soft-icon" aria-hidden="true">🐾</span>
-          <h2 id="quick-title">Nova demanda rápida</h2>
-          <p>Anote em segundos. Os detalhes podem vir depois.</p>
-        </div>
+      <section class="top-dashboard" aria-label="Ações rápidas e resumo">
+        <section class="quick-create" aria-labelledby="quick-title">
+          <div class="quick-copy">
+            <span class="soft-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img">
+                <path d="M13.5 2 4 13h7l-1 9 10-12h-7l.5-8Z" />
+              </svg>
+            </span>
+            <div>
+              <h2 id="quick-title">Demanda rápida</h2>
+              <p>Registre primeiro, organize depois.</p>
+            </div>
+          </div>
 
-        <form class="quick-form" id="quick-form">
-          <input
-            id="quick-title-input"
-            name="titulo"
-            type="text"
-            placeholder="Ex.: Impressora da secretaria não imprime"
-            autocomplete="off"
-            required
-          />
-          <button class="primary-button" type="submit">Adicionar</button>
-        </form>
+          <form class="quick-form" id="quick-form">
+            <input
+              id="quick-title-input"
+              name="titulo"
+              type="text"
+              placeholder="O que aconteceu? Ex.: impressora da secretaria parou"
+              autocomplete="off"
+              required
+            />
+            <button class="primary-button" type="submit">
+              Adicionar
+              <span class="button-mark" aria-hidden="true"></span>
+            </button>
+          </form>
+        </section>
+
+        <aside class="overview-panel" aria-label="Resumo do painel">
+          <article class="overview-card">
+            <div>
+              <h2>Fazendo agora</h2>
+              <p>ideal: até 3 demandas</p>
+            </div>
+            <strong><span id="doing-count">0</span>/3</strong>
+          </article>
+          <article class="overview-card">
+            <div>
+              <h2>Backup local</h2>
+              <p>offline-first ativo</p>
+            </div>
+            <strong id="backup-status">OK</strong>
+          </article>
+        </aside>
       </section>
 
       <section class="toolbar" aria-label="Busca, filtros e backup">

@@ -27,6 +27,8 @@ const demandForm = document.querySelector("#demand-form");
 const editPanel = document.querySelector("#edit-panel");
 const board = document.querySelector("#kanban-board");
 const totalDemandas = document.querySelector("#total-demandas");
+const doingCount = document.querySelector("#doing-count");
+const backupStatus = document.querySelector("#backup-status");
 const searchInput = document.querySelector("#search-input");
 const statusFilter = document.querySelector("#status-filter");
 const categoryFilter = document.querySelector("#category-filter");
@@ -61,7 +63,7 @@ quickForm.addEventListener("submit", (event) => {
   renderBoard();
   quickForm.reset();
   quickTitleInput.focus();
-  showToast("Demanda anotada na caixa de entrada 🐈");
+  showToast("Demanda anotada na caixa de entrada");
 });
 
 demandForm.addEventListener("submit", (event) => {
@@ -84,7 +86,7 @@ demandForm.addEventListener("submit", (event) => {
   saveDemandas();
   renderBoard();
   openEditPanel(editingDemandId);
-  showToast("Alterações salvas 🐾");
+  showToast("Alterações salvas");
 });
 
 [searchInput, statusFilter, categoryFilter, priorityFilter].forEach((field) => {
@@ -223,6 +225,8 @@ function renderBoard() {
   ).length;
 
   totalDemandas.textContent = demandas.length;
+  doingCount.textContent = doingNowCount;
+  backupStatus.textContent = "OK";
   board.innerHTML = STATUSES.map((status) => {
     const columnDemandas = filteredDemandas.filter((demanda) => demanda.status === status);
     const isDoingNow = status === "Fazendo agora";
@@ -231,7 +235,10 @@ function renderBoard() {
       <section class="kanban-column ${isDoingNow ? "focus-column" : ""}" aria-labelledby="column-${slugify(status)}">
         <header class="column-header">
           <div>
-            <h2 id="column-${slugify(status)}">${status}</h2>
+            <h2 id="column-${slugify(status)}">
+              ${getStatusIcon(status)}
+              ${status}
+            </h2>
             ${
               isDoingNow
                 ? `<p class="column-hint ${doingNowCount > 3 ? "is-alert" : ""}">Ideal: 1 a 3 demandas</p>`
@@ -244,7 +251,7 @@ function renderBoard() {
           ${
             columnDemandas.length
               ? columnDemandas.map(createDemandCard).join("")
-              : '<p class="empty-column">Tudo tranquilo por enquanto 🐈</p>'
+              : createEmptyState()
           }
         </div>
       </section>
@@ -470,7 +477,7 @@ function changeStatus(id, status) {
 
   saveDemandas();
   renderBoard();
-  showToast(finished ? "Demanda concluída 🐾" : `Movida para ${status}`);
+  showToast(finished ? "Demanda concluída" : `Movida para ${status}`);
 }
 
 function copyDemand(id) {
@@ -714,7 +721,7 @@ function createId() {
 
 function copyText(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => showToast("Resumo copiado 🐾"));
+    navigator.clipboard.writeText(text).then(() => showToast("Resumo copiado"));
     return;
   }
 
@@ -725,7 +732,7 @@ function copyText(text) {
   textarea.select();
   document.execCommand("copy");
   textarea.remove();
-  showToast("Resumo copiado 🐾");
+  showToast("Resumo copiado");
 }
 
 function showToast(message) {
@@ -750,8 +757,8 @@ function applySavedTheme() {
 
 function updateThemeButton() {
   themeToggle.textContent = document.body.classList.contains("light-mode")
-    ? "Modo escuro"
-    : "Modo claro";
+    ? "Cyber Cat"
+    : "Cozy Cat";
 }
 
 function normalizeText(value) {
@@ -763,6 +770,32 @@ function normalizeText(value) {
 
 function slugify(value) {
   return normalizeText(value).replace(/\s+/g, "-");
+}
+
+function getStatusIcon(status) {
+  const icons = {
+    "Caixa de entrada": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15h4l2 3h4l2-3h4"/><path d="M5 15 7 8h10l2 7"/><path d="M12 5v6"/><path d="m9 8 3-3 3 3"/></svg>',
+    "Fazendo agora": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 4 13h7l-1 9 10-12h-7l.5-8Z"/></svg>',
+    Aguardando: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10"/><path d="M7 21h10"/><path d="M8 3c0 5 8 5 8 9s-8 4-8 9"/><path d="M16 3c0 5-8 5-8 9s8 4 8 9"/></svg>',
+    Finalizado: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 10 17 19 7"/></svg>'
+  };
+
+  return icons[status] || "";
+}
+
+function createEmptyState() {
+  return `
+    <div class="empty-column">
+      <svg class="empty-cat" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M18 30 14 18l12 7h12l12-7-4 12" />
+        <path d="M18 30c0 11 7 18 14 18s14-7 14-18" />
+        <path d="M25 35h.1M39 35h.1" />
+        <path d="M30 40c1.5 1.2 2.5 1.2 4 0" />
+        <path d="M10 45c6 4 11 4 16 1M54 45c-6 4-11 4-16 1" />
+      </svg>
+      <span>Tudo tranquilo por enquanto</span>
+    </div>
+  `;
 }
 
 // Evita que textos digitados sejam interpretados como HTML ao renderizar cards.
