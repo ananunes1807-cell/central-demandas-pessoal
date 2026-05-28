@@ -272,6 +272,10 @@ h3 {
   color: var(--danger);
 }
 
+button.danger-file {
+  background: rgba(255, 159, 168, 0.12);
+}
+
 .ghost-button:hover,
 .file-button:hover,
 .card-actions button:hover,

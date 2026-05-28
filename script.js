@@ -37,6 +37,7 @@ const cancelEditButton = document.querySelector("#cancel-edit-button");
 const duplicateEditButton = document.querySelector("#duplicate-edit-button");
 const themeToggle = document.querySelector("#theme-toggle");
 const exportButton = document.querySelector("#export-button");
+const exportClearButton = document.querySelector("#export-clear-button");
 const mergeInput = document.querySelector("#merge-input");
 const replaceInput = document.querySelector("#replace-input");
 const timelineList = document.querySelector("#timeline-list");
@@ -110,6 +111,7 @@ themeToggle.addEventListener("click", () => {
 });
 
 exportButton.addEventListener("click", exportBackup);
+exportClearButton.addEventListener("click", exportAndAskToClear);
 mergeInput.addEventListener("change", (event) => importBackup(event, "merge"));
 replaceInput.addEventListener("change", (event) => importBackup(event, "replace"));
 
@@ -555,6 +557,37 @@ function renderTimeline(demanda) {
 }
 
 function exportBackup() {
+  downloadBackup();
+  showToast("Backup exportado");
+}
+
+function exportAndAskToClear() {
+  if (!demandas.length) {
+    showToast("Não há demandas para exportar");
+    return;
+  }
+
+  downloadBackup();
+
+  window.setTimeout(() => {
+    const shouldClear = confirm(
+      "Backup baixado. Deseja apagar as demandas deste aparelho agora?\n\nUse isso apenas depois de guardar ou enviar o arquivo JSON."
+    );
+
+    if (!shouldClear) {
+      showToast("Demandas mantidas neste aparelho");
+      return;
+    }
+
+    demandas = [];
+    saveDemandas();
+    closeEditPanel();
+    renderBoard();
+    showToast("Demandas apagadas deste aparelho");
+  }, 300);
+}
+
+function downloadBackup() {
   const backup = {
     app: "Central de Demandas",
     versao: 3,
