@@ -157,6 +157,47 @@
         </div>
       </section>
 
+      <section class="report-panel" aria-labelledby="report-title">
+        <div>
+          <h2 id="report-title">Relatório de finalizadas</h2>
+          <p>Exporte atividades concluídas para analisar ou enviar a uma IA.</p>
+        </div>
+
+        <div class="report-controls">
+          <label>
+            Período
+            <select id="report-period">
+              <option value="today">Hoje</option>
+              <option value="7days">Últimos 7 dias</option>
+              <option value="month">Mês atual</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          </label>
+
+          <label class="custom-period" id="custom-start-wrapper" hidden>
+            Início
+            <input id="report-start" type="date" />
+          </label>
+
+          <label class="custom-period" id="custom-end-wrapper" hidden>
+            Fim
+            <input id="report-end" type="date" />
+          </label>
+
+          <div class="report-actions">
+            <button class="ghost-button" id="export-report-txt" type="button">
+              Exportar TXT
+            </button>
+            <button class="ghost-button" id="export-report-json" type="button">
+              Exportar JSON
+            </button>
+            <button class="primary-button" id="copy-ai-prompt" type="button">
+              Copiar prompt para IA
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section class="edit-panel" id="edit-panel" aria-labelledby="edit-title" hidden>
         <form id="demand-form">
           <div class="form-header">

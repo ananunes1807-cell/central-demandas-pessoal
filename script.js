@@ -40,6 +40,14 @@ const exportButton = document.querySelector("#export-button");
 const exportClearButton = document.querySelector("#export-clear-button");
 const mergeInput = document.querySelector("#merge-input");
 const replaceInput = document.querySelector("#replace-input");
+const reportPeriod = document.querySelector("#report-period");
+const reportStart = document.querySelector("#report-start");
+const reportEnd = document.querySelector("#report-end");
+const customStartWrapper = document.querySelector("#custom-start-wrapper");
+const customEndWrapper = document.querySelector("#custom-end-wrapper");
+const exportReportTxtButton = document.querySelector("#export-report-txt");
+const exportReportJsonButton = document.querySelector("#export-report-json");
+const copyAiPromptButton = document.querySelector("#copy-ai-prompt");
 const timelineList = document.querySelector("#timeline-list");
 const toast = document.querySelector("#toast");
 
@@ -114,6 +122,10 @@ exportButton.addEventListener("click", exportBackup);
 exportClearButton.addEventListener("click", exportAndAskToClear);
 mergeInput.addEventListener("change", (event) => importBackup(event, "merge"));
 replaceInput.addEventListener("change", (event) => importBackup(event, "replace"));
+reportPeriod.addEventListener("change", updateCustomPeriodVisibility);
+exportReportTxtButton.addEventListener("click", () => exportFinishedReport("txt"));
+exportReportJsonButton.addEventListener("click", () => exportFinishedReport("json"));
+copyAiPromptButton.addEventListener("click", copyAiReportPrompt);
 
 board.addEventListener("click", (event) => {
   const button = event.target.closest("button");
@@ -587,6 +599,219 @@ function exportAndAskToClear() {
   }, 300);
 }
 
+function exportFinishedReport(format) {
+  const report = createFinishedReport();
+
+  if (!report.demandas.length) {
+    showToast("Nenhuma demanda finalizada nesse período");
+    return;
+  }
+
+  if (format === "json") {
+    downloadTextFile(
+      `relatorio-finalizadas-${getToday()}.json`,
+      JSON.stringify(report, null, 2),
+      "application/json"
+    );
+    showToast("Relatório JSON exportado");
+    return;
+  }
+
+  downloadTextFile(
+    `relatorio-finalizadas-${getToday()}.txt`,
+    formatReportAsText(report),
+    "text/plain"
+  );
+  showToast("Relatório TXT exportado");
+}
+
+function copyAiReportPrompt() {
+  const report = createFinishedReport();
+
+  if (!report.demandas.length) {
+    showToast("Nenhuma demanda finalizada nesse período");
+    return;
+  }
+
+  copyText(createAiPrompt(report), "Prompt para IA copiado");
+}
+
+function createFinishedReport() {
+  const period = getReportPeriodRange();
+  const finishedDemandas = demandas
+    .filter((demanda) => demanda.status === "Finalizado" && demanda.finalizadaEm)
+    .filter((demanda) => isDateInRange(demanda.finalizadaEm, period.start, period.end))
+    .sort((a, b) => new Date(a.finalizadaEm) - new Date(b.finalizadaEm))
+    .map(normalizeDemandForReport);
+
+  return {
+    app: "Central de Demandas",
+    tipo: "demandas-finalizadas",
+    geradoEm: new Date().toISOString(),
+    periodo: {
+      rotulo: getReportPeriodLabel(),
+      inicio: period.start.toISOString(),
+      fim: period.end.toISOString()
+    },
+    total: finishedDemandas.length,
+    demandas: finishedDemandas
+  };
+}
+
+function normalizeDemandForReport(demanda) {
+  return {
+    titulo: demanda.titulo,
+    setor: demanda.setor || "Não informado",
+    categoria: demanda.categoria,
+    prioridade: demanda.prioridade,
+    status: demanda.status,
+    criadaEm: demanda.criadaEm,
+    finalizadaEm: demanda.finalizadaEm,
+    observacoesTecnicas: demanda.observacoesTecnicas || "",
+    oQueJaFoiFeito: demanda.feito || "",
+    solucaoAplicada: demanda.feito || demanda.descricao || "",
+    proximoPasso: demanda.proximoPasso || "",
+    historico: demanda.historico || []
+  };
+}
+
+function formatReportAsText(report) {
+  const lines = [
+    "RELATÓRIO DE DEMANDAS FINALIZADAS",
+    `Período: ${report.periodo.rotulo}`,
+    `Gerado em: ${formatDateTime(report.geradoEm)}`,
+    `Total finalizadas: ${report.total}`,
+    ""
+  ];
+
+  report.demandas.forEach((demanda, index) => {
+    lines.push(`## ${index + 1}. ${demanda.titulo}`);
+    lines.push(`Setor: ${demanda.setor}`);
+    lines.push(`Categoria: ${demanda.categoria}`);
+    lines.push(`Prioridade: ${demanda.prioridade}`);
+    lines.push(`Status: ${demanda.status}`);
+    lines.push(`Criação: ${formatDateTime(demanda.criadaEm)}`);
+    lines.push(`Finalização: ${formatDateTime(demanda.finalizadaEm)}`);
+    lines.push(`Observações técnicas: ${demanda.observacoesTecnicas || "Não informado"}`);
+    lines.push(`O que já foi feito: ${demanda.oQueJaFoiFeito || "Não informado"}`);
+    lines.push(`Solução aplicada: ${demanda.solucaoAplicada || "Não informado"}`);
+    lines.push("Histórico:");
+
+    demanda.historico.forEach((item) => {
+      lines.push(`- ${formatDateTime(item.em)} - ${item.texto}`);
+    });
+
+    lines.push("");
+  });
+
+  return lines.join("\n");
+}
+
+function createAiPrompt(report) {
+  return [
+    "Você é uma IA especialista em relatórios de produtividade, suporte técnico e infraestrutura.",
+    "Analise os dados abaixo, gerados pela minha Central de Demandas, e produza:",
+    "",
+    "1. Relatório detalhado das atividades realizadas",
+    "2. Resumo executivo",
+    "3. Lista de atividades realizadas",
+    "4. Problemas recorrentes",
+    "5. Demandas agrupadas por categoria",
+    "6. Demandas agrupadas por setor",
+    "7. Pontos de atenção",
+    "8. Evidências de produtividade",
+    "9. Sugestões de melhoria para rotina de suporte",
+    "",
+    "Use linguagem profissional, clara e objetiva.",
+    "Considere o histórico/linha do tempo como evidência de execução.",
+    "",
+    "DADOS EM JSON:",
+    JSON.stringify(report, null, 2)
+  ].join("\n");
+}
+
+function getReportPeriodRange() {
+  const now = new Date();
+  const selected = reportPeriod.value;
+
+  if (selected === "7days") {
+    const start = startOfDay(new Date(now));
+    start.setDate(start.getDate() - 6);
+    return { start, end: endOfDay(now) };
+  }
+
+  if (selected === "month") {
+    return {
+      start: new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0),
+      end: endOfDay(now)
+    };
+  }
+
+  if (selected === "custom") {
+    return {
+      start: startOfDay(parseDateInput(reportStart.value) || now),
+      end: endOfDay(parseDateInput(reportEnd.value) || now)
+    };
+  }
+
+  return { start: startOfDay(now), end: endOfDay(now) };
+}
+
+function getReportPeriodLabel() {
+  const selected = reportPeriod.value;
+
+  if (selected === "7days") {
+    return "Últimos 7 dias";
+  }
+
+  if (selected === "month") {
+    return "Mês atual";
+  }
+
+  if (selected === "custom") {
+    return `${reportStart.value || "início"} até ${reportEnd.value || "fim"}`;
+  }
+
+  return "Hoje";
+}
+
+function updateCustomPeriodVisibility() {
+  const isCustom = reportPeriod.value === "custom";
+
+  customStartWrapper.hidden = !isCustom;
+  customEndWrapper.hidden = !isCustom;
+}
+
+function isDateInRange(value, start, end) {
+  const date = new Date(value);
+
+  return date >= start && date <= end;
+}
+
+function parseDateInput(value) {
+  if (!value) {
+    return null;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+
+  return new Date(year, month - 1, day);
+}
+
+function startOfDay(date) {
+  const result = new Date(date);
+
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+function endOfDay(date) {
+  const result = new Date(date);
+
+  result.setHours(23, 59, 59, 999);
+  return result;
+}
+
 function downloadBackup() {
   const backup = {
     app: "Central de Demandas",
@@ -602,10 +827,18 @@ function downloadBackup() {
   const blob = new Blob([JSON.stringify(backup, null, 2)], {
     type: "application/json"
   });
+  downloadBlob(`central-demandas-${getToday()}.json`, blob);
+}
+
+function downloadTextFile(filename, content, type) {
+  downloadBlob(filename, new Blob([content], { type }));
+}
+
+function downloadBlob(filename, blob) {
   const link = document.createElement("a");
 
   link.href = URL.createObjectURL(blob);
-  link.download = `central-demandas-${getToday()}.json`;
+  link.download = filename;
   link.click();
   URL.revokeObjectURL(link.href);
 }
@@ -752,9 +985,9 @@ function createId() {
   return `demanda-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function copyText(text) {
+function copyText(text, successMessage = "Resumo copiado") {
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => showToast("Resumo copiado"));
+    navigator.clipboard.writeText(text).then(() => showToast(successMessage));
     return;
   }
 
@@ -765,7 +998,7 @@ function copyText(text) {
   textarea.select();
   document.execCommand("copy");
   textarea.remove();
-  showToast("Resumo copiado");
+  showToast(successMessage);
 }
 
 function showToast(message) {

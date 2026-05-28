@@ -1,4 +1,4 @@
-const CACHE_NAME = "central-demandas-v8";
+const CACHE_NAME = "central-demandas-v9";
 const APP_SHELL = [
   "/",
   "/manifest.webmanifest",

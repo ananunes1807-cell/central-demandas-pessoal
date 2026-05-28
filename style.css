@@ -295,6 +295,7 @@ button.danger-file {
 
 .quick-create,
 .toolbar,
+.report-panel,
 .edit-panel,
 .kanban-column {
   border: 1px solid var(--border-soft);
@@ -450,6 +451,34 @@ body.light-mode .quick-form input {
   border-radius: 22px;
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.report-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.8fr);
+  gap: 18px;
+  align-items: end;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.report-panel p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.report-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
 }
 
 .file-button input {
@@ -764,6 +793,11 @@ dd {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .report-panel,
+  .report-controls {
+    grid-template-columns: 1fr;
+  }
+
   .backup-actions {
     grid-column: 1 / -1;
   }
@@ -783,6 +817,8 @@ dd {
   .quick-create,
   .quick-form,
   .toolbar,
+  .report-panel,
+  .report-controls,
   .form-header,
   .form-grid,
   .form-grid.two-columns,
@@ -811,11 +847,13 @@ dd {
   }
 
   .backup-actions,
+  .report-actions,
   .header-actions {
     width: 100%;
   }
 
   .backup-actions > *,
+  .report-actions > *,
   .header-actions > *,
   .quick-form button {
     width: 100%;
