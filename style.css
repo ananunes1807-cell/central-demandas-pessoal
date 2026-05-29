@@ -209,7 +209,9 @@ h3 {
 .backup-actions,
 .form-actions,
 .card-actions,
-.status-actions {
+.status-actions,
+.voice-row,
+.voice-edit-controls {
   display: flex;
   flex-wrap: wrap;
   gap: 9px;
@@ -219,6 +221,7 @@ h3 {
 .total-pill,
 .ghost-button,
 .primary-button,
+.voice-button,
 .card-actions button,
 .status-actions button,
 .icon-button,
@@ -260,6 +263,7 @@ h3 {
 }
 
 .ghost-button,
+.voice-button,
 .file-button,
 .card-actions button,
 .status-actions button,
@@ -277,6 +281,7 @@ button.danger-file {
 }
 
 .ghost-button:hover,
+.voice-button:hover,
 .file-button:hover,
 .card-actions button:hover,
 .status-actions button:hover,
@@ -381,6 +386,74 @@ body.light-mode .quick-form input {
   min-height: 68px;
   border-radius: 999px;
   font-size: 1.05rem;
+}
+
+.voice-row {
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.voice-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--muted-strong);
+}
+
+.voice-button svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.voice-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.voice-status {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+body.is-listening .voice-button {
+  border-color: var(--cyan);
+  background: var(--cyan-soft);
+  box-shadow: 0 0 0 4px rgba(145, 220, 232, 0.08);
+}
+
+.voice-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+  gap: 14px;
+  align-items: end;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  padding: 16px;
+}
+
+.voice-panel p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.voice-edit-controls {
+  align-items: end;
+}
+
+.voice-edit-controls label {
+  flex: 1 1 220px;
 }
 
 .button-mark {
@@ -848,12 +921,16 @@ dd {
 
   .backup-actions,
   .report-actions,
+  .voice-row,
+  .voice-edit-controls,
   .header-actions {
     width: 100%;
   }
 
   .backup-actions > *,
   .report-actions > *,
+  .voice-row > *,
+  .voice-edit-controls > *,
   .header-actions > *,
   .quick-form button {
     width: 100%;

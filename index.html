@@ -67,6 +67,23 @@
               <span class="button-mark" aria-hidden="true"></span>
             </button>
           </form>
+          <div class="voice-row">
+            <button class="voice-button" id="quick-voice-button" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 4a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z" />
+                <path d="M5 11a7 7 0 0 0 14 0" />
+                <path d="M12 18v3" />
+                <path d="M9 21h6" />
+              </svg>
+              Nova demanda por voz
+            </button>
+            <button class="ghost-button" id="cancel-voice-button" type="button" hidden>
+              Cancelar voz
+            </button>
+            <span class="voice-status" id="voice-status" role="status" aria-live="polite">
+              O navegador pode pedir permissão para usar o microfone.
+            </span>
+          </div>
         </section>
 
         <aside class="overview-panel" aria-label="Resumo do painel">
@@ -307,6 +324,32 @@
               placeholder="O que falta fazer, aguardar ou confirmar."
             ></textarea>
           </label>
+
+          <section class="voice-panel" aria-labelledby="voice-edit-title">
+            <div>
+              <h3 id="voice-edit-title">Adicionar observação por voz</h3>
+              <p>Escolha o campo, fale e revise antes de salvar.</p>
+            </div>
+            <div class="voice-edit-controls">
+              <label>
+                Inserir em
+                <select id="voice-target">
+                  <option value="feito">O que já foi feito</option>
+                  <option value="observacoesTecnicas">Observações técnicas</option>
+                  <option value="proximoPasso">Próximo passo</option>
+                </select>
+              </label>
+              <button class="voice-button" id="edit-voice-button" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 4a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z" />
+                  <path d="M5 11a7 7 0 0 0 14 0" />
+                  <path d="M12 18v3" />
+                  <path d="M9 21h6" />
+                </svg>
+                Ditar observação
+              </button>
+            </div>
+          </section>
 
           <section class="timeline-panel" aria-labelledby="timeline-title">
             <h3 id="timeline-title">Histórico da demanda</h3>

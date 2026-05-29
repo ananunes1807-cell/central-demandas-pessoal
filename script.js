@@ -23,6 +23,9 @@ const DEFAULT_DEMAND = {
 
 const quickForm = document.querySelector("#quick-form");
 const quickTitleInput = document.querySelector("#quick-title-input");
+const quickVoiceButton = document.querySelector("#quick-voice-button");
+const cancelVoiceButton = document.querySelector("#cancel-voice-button");
+const voiceStatus = document.querySelector("#voice-status");
 const demandForm = document.querySelector("#demand-form");
 const editPanel = document.querySelector("#edit-panel");
 const board = document.querySelector("#kanban-board");
@@ -48,11 +51,15 @@ const customEndWrapper = document.querySelector("#custom-end-wrapper");
 const exportReportTxtButton = document.querySelector("#export-report-txt");
 const exportReportJsonButton = document.querySelector("#export-report-json");
 const copyAiPromptButton = document.querySelector("#copy-ai-prompt");
+const editVoiceButton = document.querySelector("#edit-voice-button");
+const voiceTarget = document.querySelector("#voice-target");
 const timelineList = document.querySelector("#timeline-list");
 const toast = document.querySelector("#toast");
 
 let demandas = loadDemandas();
 let editingDemandId = null;
+let pendingQuickVoice = null;
+let activeRecognition = null;
 
 applySavedTheme();
 renderBoard();
@@ -67,10 +74,11 @@ quickForm.addEventListener("submit", (event) => {
     return;
   }
 
-  demandas.unshift(createDemand({ titulo }));
+  demandas.unshift(createDemand(createQuickDemandValues(titulo)));
   saveDemandas();
   renderBoard();
   quickForm.reset();
+  pendingQuickVoice = null;
   quickTitleInput.focus();
   showToast("Demanda anotada na caixa de entrada");
 });
@@ -126,6 +134,9 @@ reportPeriod.addEventListener("change", updateCustomPeriodVisibility);
 exportReportTxtButton.addEventListener("click", () => exportFinishedReport("txt"));
 exportReportJsonButton.addEventListener("click", () => exportFinishedReport("json"));
 copyAiPromptButton.addEventListener("click", copyAiReportPrompt);
+quickVoiceButton.addEventListener("click", startQuickVoice);
+editVoiceButton.addEventListener("click", startEditVoice);
+cancelVoiceButton.addEventListener("click", stopVoiceRecognition);
 
 board.addEventListener("click", (event) => {
   const button = event.target.closest("button");
@@ -180,6 +191,18 @@ function createDemand(values) {
 
   demand.historico = [createHistoryItem("Demanda criada")];
   return demand;
+}
+
+function createQuickDemandValues(titulo) {
+  if (!pendingQuickVoice) {
+    return { titulo };
+  }
+
+  return {
+    titulo,
+    descricao: pendingQuickVoice.descricao,
+    setor: pendingQuickVoice.setor
+  };
 }
 
 function loadDemandas() {
@@ -841,6 +864,151 @@ function downloadBlob(filename, blob) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(link.href);
+}
+
+function startQuickVoice() {
+  startVoiceRecognition({
+    onResult(text) {
+      const parsed = parseQuickVoiceText(text);
+
+      pendingQuickVoice = parsed;
+      quickTitleInput.value = parsed.titulo;
+      voiceStatus.textContent = parsed.descricao
+        ? "Texto capturado. Revise o título e clique em Adicionar."
+        : "Texto capturado. Revise antes de adicionar.";
+      showToast("Texto capturado");
+    }
+  });
+}
+
+function startEditVoice() {
+  if (!editingDemandId) {
+    showToast("Abra uma demanda para adicionar observação por voz");
+    return;
+  }
+
+  startVoiceRecognition({
+    onResult(text) {
+      const field = demandForm[voiceTarget.value];
+
+      field.value = appendText(field.value, text);
+      voiceStatus.textContent = "Texto capturado na edição. Revise e salve.";
+      showToast("Observação capturada");
+      field.focus();
+    }
+  });
+}
+
+function startVoiceRecognition({ onResult }) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    voiceStatus.textContent = "Este navegador não suporta reconhecimento de voz. Tente no Google Chrome.";
+    showToast("Reconhecimento de voz não suportado");
+    return;
+  }
+
+  stopVoiceRecognition();
+
+  const recognition = new SpeechRecognition();
+
+  recognition.lang = "pt-BR";
+  recognition.interimResults = false;
+  recognition.continuous = false;
+  activeRecognition = recognition;
+  document.body.classList.add("is-listening");
+  quickVoiceButton.disabled = true;
+  editVoiceButton.disabled = true;
+  cancelVoiceButton.hidden = false;
+  voiceStatus.textContent = "Ouvindo... fale a demanda com calma.";
+
+  recognition.onresult = (event) => {
+    const text = Array.from(event.results)
+      .map((result) => result[0].transcript)
+      .join(" ")
+      .trim();
+
+    if (text) {
+      onResult(text);
+    }
+  };
+
+  recognition.onerror = (event) => {
+    const message =
+      event.error === "not-allowed" || event.error === "service-not-allowed"
+        ? "Permissão do microfone negada. Libere o microfone no Chrome para usar voz."
+        : "Não consegui capturar a voz. Tente novamente em um ambiente mais silencioso.";
+
+    voiceStatus.textContent = message;
+    showToast(message);
+  };
+
+  recognition.onend = clearVoiceState;
+  recognition.start();
+}
+
+function stopVoiceRecognition() {
+  if (activeRecognition) {
+    activeRecognition.stop();
+  }
+
+  clearVoiceState();
+}
+
+function clearVoiceState() {
+  activeRecognition = null;
+  document.body.classList.remove("is-listening");
+  quickVoiceButton.disabled = false;
+  editVoiceButton.disabled = false;
+  cancelVoiceButton.hidden = true;
+}
+
+function parseQuickVoiceText(text) {
+  const parts = text.split(/,|;|\be\b depois\b/i).map((part) => part.trim()).filter(Boolean);
+  const titulo = sentenceCase(parts[0] || text);
+  const descricao = parts.slice(1).join(". ");
+
+  return {
+    titulo,
+    descricao,
+    setor: detectSetor(text)
+  };
+}
+
+function detectSetor(text) {
+  const normalized = normalizeText(text);
+  const sectors = [
+    ["Comercial", ["comercial"]],
+    ["Secretaria", ["secretaria"]],
+    ["Laboratório", ["laboratorio", "laboratório", "lab"]],
+    ["Salas", ["sala", "salas"]],
+    ["Coordenação", ["coordenacao", "coordenação", "coordenaçao"]],
+    ["Limpeza", ["limpeza"]],
+    ["Estágio", ["estagio", "estágio"]],
+    ["RH", ["rh", "recursos humanos"]],
+    ["Financeiro", ["financeiro"]],
+    ["TI", ["ti", "informatica", "informática"]]
+  ];
+
+  const found = sectors.find(([, aliases]) => aliases.some((alias) => normalized.includes(normalizeText(alias))));
+
+  return found ? found[0] : "Outros";
+}
+
+function appendText(currentValue, text) {
+  const cleanText = text.trim();
+
+  if (!currentValue.trim()) {
+    return sentenceCase(cleanText);
+  }
+
+  return `${currentValue.trim()}\n${sentenceCase(cleanText)}`;
+}
+
+function sentenceCase(value) {
+  const cleanValue = value.trim();
+
+  return cleanValue ? cleanValue[0].toUpperCase() + cleanValue.slice(1) : "";
 }
 
 function importBackup(event, mode) {
