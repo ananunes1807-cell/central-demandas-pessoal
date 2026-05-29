@@ -58,12 +58,12 @@
               id="quick-title-input"
               name="titulo"
               type="text"
-              placeholder="O que aconteceu? Ex.: impressora da secretaria parou"
+              placeholder="Digite livremente o que aconteceu ou o que você fez"
               autocomplete="off"
               required
             />
             <button class="primary-button" type="submit">
-              Adicionar
+              Registrar
               <span class="button-mark" aria-hidden="true"></span>
             </button>
           </form>
@@ -131,14 +131,17 @@
           <select id="category-filter">
             <option value="Todas">Todas</option>
             <option>Rede</option>
+            <option>Internet/Wi-Fi</option>
             <option>Wi-Fi</option>
             <option>Impressora</option>
             <option>Computador</option>
             <option>Sistema</option>
+            <option>Chromebook</option>
             <option>Laboratorio</option>
             <option>Sala de Prova</option>
             <option>Instalacao</option>
             <option>Manutencao</option>
+            <option>Infraestrutura</option>
             <option>Mobiliario</option>
             <option>Eletrica</option>
             <option>Outros</option>
@@ -242,14 +245,17 @@
               Categoria
               <select id="categoria" name="categoria">
                 <option>Rede</option>
+                <option>Internet/Wi-Fi</option>
                 <option>Wi-Fi</option>
                 <option>Impressora</option>
                 <option>Computador</option>
                 <option>Sistema</option>
+                <option>Chromebook</option>
                 <option>Laboratorio</option>
                 <option>Sala de Prova</option>
                 <option>Instalacao</option>
                 <option>Manutencao</option>
+                <option>Infraestrutura</option>
                 <option>Mobiliario</option>
                 <option>Eletrica</option>
                 <option>Outros</option>
@@ -292,6 +298,17 @@
             ></textarea>
           </label>
 
+          <label>
+            Texto original registrado
+            <textarea
+              id="textoOriginal"
+              name="textoOriginal"
+              rows="3"
+              placeholder="Texto livre capturado no registro rápido ou por voz."
+              readonly
+            ></textarea>
+          </label>
+
           <div class="form-grid two-columns">
             <label>
               Observações técnicas
@@ -324,6 +341,28 @@
               placeholder="O que falta fazer, aguardar ou confirmar."
             ></textarea>
           </label>
+
+          <section class="evidence-panel" aria-labelledby="evidence-title">
+            <div>
+              <h3 id="evidence-title">Evidência externa</h3>
+              <p>Registre se existem fotos na galeria do celular. As fotos não são armazenadas aqui.</p>
+            </div>
+            <label class="evidence-check">
+              <input id="possuiEvidencia" name="possuiEvidencia" type="checkbox" />
+              Possui evidência?
+            </label>
+            <div class="photo-count" aria-label="Quantidade de fotos">
+              <span>Quantidade de fotos</span>
+              <label><input type="radio" name="quantidadeFotos" value="1" />1</label>
+              <label><input type="radio" name="quantidadeFotos" value="2" />2</label>
+              <label><input type="radio" name="quantidadeFotos" value="3" />3</label>
+              <label><input type="radio" name="quantidadeFotos" value="4" />4</label>
+              <label class="photo-plus">
+                +
+                <input id="quantidadeFotosExtra" name="quantidadeFotosExtra" type="number" min="5" placeholder="5+" />
+              </label>
+            </div>
+          </section>
 
           <section class="voice-panel" aria-labelledby="voice-edit-title">
             <div>

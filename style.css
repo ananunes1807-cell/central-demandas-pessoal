@@ -85,6 +85,11 @@ textarea {
   font: inherit;
 }
 
+textarea[readonly] {
+  color: var(--muted);
+  background: rgba(145, 220, 232, 0.08);
+}
+
 button,
 .file-button {
   cursor: pointer;
@@ -441,6 +446,83 @@ body.is-listening .voice-button {
   border-radius: var(--radius-md);
   background: var(--surface-muted);
   padding: 16px;
+}
+
+.evidence-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  padding: 16px;
+}
+
+.evidence-panel p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.evidence-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.evidence-check input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
+.photo-count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.photo-count > span {
+  flex: 1 1 160px;
+  color: var(--muted-strong);
+  font-weight: 760;
+}
+
+.photo-count label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  min-height: 42px;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted-strong);
+}
+
+.photo-count input[type="radio"] {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  position: absolute;
+}
+
+.photo-count label:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.photo-plus {
+  gap: 8px;
+  padding: 0 10px;
+}
+
+.photo-plus input {
+  width: 76px;
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 7px 9px;
 }
 
 .voice-panel p {

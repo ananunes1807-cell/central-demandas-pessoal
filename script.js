@@ -18,6 +18,9 @@ const DEFAULT_DEMAND = {
   observacoesTecnicas: "",
   feito: "",
   proximoPasso: "",
+  textoOriginal: "",
+  possuiEvidencia: false,
+  quantidadeFotos: 0,
   historico: []
 };
 
@@ -58,7 +61,6 @@ const toast = document.querySelector("#toast");
 
 let demandas = loadDemandas();
 let editingDemandId = null;
-let pendingQuickVoice = null;
 let activeRecognition = null;
 
 applySavedTheme();
@@ -68,19 +70,13 @@ registerServiceWorker();
 quickForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
-  const titulo = quickTitleInput.value.trim();
+  const rawText = quickTitleInput.value.trim();
 
-  if (!titulo) {
+  if (!rawText) {
     return;
   }
 
-  demandas.unshift(createDemand(createQuickDemandValues(titulo)));
-  saveDemandas();
-  renderBoard();
-  quickForm.reset();
-  pendingQuickVoice = null;
-  quickTitleInput.focus();
-  showToast("Demanda anotada na caixa de entrada");
+  registerQuickDemand(rawText, "texto");
 });
 
 demandForm.addEventListener("submit", (event) => {
@@ -102,7 +98,7 @@ demandForm.addEventListener("submit", (event) => {
 
   saveDemandas();
   renderBoard();
-  openEditPanel(editingDemandId);
+  closeEditPanel();
   showToast("Alterações salvas");
 });
 
@@ -193,18 +189,6 @@ function createDemand(values) {
   return demand;
 }
 
-function createQuickDemandValues(titulo) {
-  if (!pendingQuickVoice) {
-    return { titulo };
-  }
-
-  return {
-    titulo,
-    descricao: pendingQuickVoice.descricao,
-    setor: pendingQuickVoice.setor
-  };
-}
-
 function loadDemandas() {
   const saved = localStorage.getItem(STORAGE_KEY);
 
@@ -241,6 +225,9 @@ function normalizeDemand(demanda) {
     observacoesTecnicas: oldTechnical,
     feito: oldDone,
     proximoPasso: demanda.proximoPasso || "",
+    textoOriginal: demanda.textoOriginal || demanda.descricao || "",
+    possuiEvidencia: Boolean(demanda.possuiEvidencia),
+    quantidadeFotos: Number(demanda.quantidadeFotos || 0),
     historico: history.length
       ? history.map(normalizeHistoryItem)
       : [createHistoryItem("Demanda criada", createdAt)]
@@ -329,6 +316,9 @@ function getFilteredDemandas() {
 function createDemandCard(demanda) {
   const priorityClass = `priority-${slugify(demanda.prioridade)}`;
   const copyBadge = demanda.copiadaDe ? '<span class="copy-badge">Cópia</span>' : "";
+  const evidenceBadge = demanda.possuiEvidencia
+    ? `<span>Evidência: ${demanda.quantidadeFotos || 1} foto(s)</span>`
+    : "";
   const notes = demanda.descricao || demanda.feito || demanda.proximoPasso || "Sem observações.";
   const previousStatus = getRelativeStatus(demanda.status, -1);
   const nextStatus = getRelativeStatus(demanda.status, 1);
@@ -340,6 +330,7 @@ function createDemandCard(demanda) {
           <span>${escapeHtml(demanda.categoria)}</span>
           <span>${escapeHtml(demanda.prioridade)}</span>
           ${copyBadge}
+          ${evidenceBadge}
         </div>
         <button class="icon-button" type="button" data-action="edit" title="Editar demanda">Editar</button>
       </div>
@@ -401,9 +392,12 @@ function openEditPanel(id) {
   demandForm.status.value = demanda.status;
   demandForm.data.value = demanda.data;
   demandForm.descricao.value = demanda.descricao;
+  demandForm.textoOriginal.value = demanda.textoOriginal;
   demandForm.observacoesTecnicas.value = demanda.observacoesTecnicas;
   demandForm.feito.value = demanda.feito;
   demandForm.proximoPasso.value = demanda.proximoPasso;
+  demandForm.possuiEvidencia.checked = demanda.possuiEvidencia;
+  setPhotoCount(demanda.quantidadeFotos);
   renderTimeline(demanda);
 
   editPanel.hidden = false;
@@ -429,9 +423,12 @@ function getFormValues() {
     status: formData.get("status"),
     data: formData.get("data") || getToday(),
     descricao: formData.get("descricao").trim(),
+    textoOriginal: formData.get("textoOriginal").trim(),
     observacoesTecnicas: formData.get("observacoesTecnicas").trim(),
     feito: formData.get("feito").trim(),
-    proximoPasso: formData.get("proximoPasso").trim()
+    proximoPasso: formData.get("proximoPasso").trim(),
+    possuiEvidencia: formData.get("possuiEvidencia") === "on",
+    quantidadeFotos: getSelectedPhotoCount(formData)
   };
 }
 
@@ -470,6 +467,13 @@ function getChangeMessages(oldDemand, nextDemand) {
 
   if (oldDemand.proximoPasso !== nextDemand.proximoPasso) {
     messages.push("Próximo passo atualizado");
+  }
+
+  if (
+    oldDemand.possuiEvidencia !== nextDemand.possuiEvidencia ||
+    oldDemand.quantidadeFotos !== nextDemand.quantidadeFotos
+  ) {
+    messages.push("Evidências externas atualizadas");
   }
 
   if (oldDemand.descricao !== nextDemand.descricao) {
@@ -694,6 +698,9 @@ function normalizeDemandForReport(demanda) {
     oQueJaFoiFeito: demanda.feito || "",
     solucaoAplicada: demanda.feito || demanda.descricao || "",
     proximoPasso: demanda.proximoPasso || "",
+    textoOriginal: demanda.textoOriginal || "",
+    possuiEvidencia: demanda.possuiEvidencia,
+    quantidadeFotos: demanda.quantidadeFotos,
     historico: demanda.historico || []
   };
 }
@@ -718,6 +725,8 @@ function formatReportAsText(report) {
     lines.push(`Observações técnicas: ${demanda.observacoesTecnicas || "Não informado"}`);
     lines.push(`O que já foi feito: ${demanda.oQueJaFoiFeito || "Não informado"}`);
     lines.push(`Solução aplicada: ${demanda.solucaoAplicada || "Não informado"}`);
+    lines.push(`Texto original: ${demanda.textoOriginal || "Não informado"}`);
+    lines.push(`Possui evidência: ${demanda.possuiEvidencia ? `Sim, ${demanda.quantidadeFotos || 1} foto(s)` : "Não"}`);
     lines.push("Histórico:");
 
     demanda.historico.forEach((item) => {
@@ -869,14 +878,9 @@ function downloadBlob(filename, blob) {
 function startQuickVoice() {
   startVoiceRecognition({
     onResult(text) {
-      const parsed = parseQuickVoiceText(text);
-
-      pendingQuickVoice = parsed;
-      quickTitleInput.value = parsed.titulo;
-      voiceStatus.textContent = parsed.descricao
-        ? "Texto capturado. Revise o título e clique em Adicionar."
-        : "Texto capturado. Revise antes de adicionar.";
-      showToast("Texto capturado");
+      quickTitleInput.value = text;
+      registerQuickDemand(text, "voz");
+      voiceStatus.textContent = "Texto capturado e demanda registrada.";
     }
   });
 }
@@ -963,16 +967,38 @@ function clearVoiceState() {
   cancelVoiceButton.hidden = true;
 }
 
-function parseQuickVoiceText(text) {
-  const parts = text.split(/,|;|\be\b depois\b/i).map((part) => part.trim()).filter(Boolean);
-  const titulo = sentenceCase(parts[0] || text);
-  const descricao = parts.slice(1).join(". ");
+function registerQuickDemand(rawText, source) {
+  const demandValues = createDemandFromRawText(rawText, source);
+
+  demandas.unshift(createDemand(demandValues));
+  saveDemandas();
+  renderBoard();
+  quickForm.reset();
+  quickTitleInput.focus();
+  showToast(source === "voz" ? "Registro por voz salvo" : "Demanda registrada com sucesso");
+}
+
+function createDemandFromRawText(rawText, source) {
+  const cleanText = rawText.trim();
 
   return {
-    titulo,
-    descricao,
-    setor: detectSetor(text)
+    titulo: extractTitle(cleanText),
+    descricao: cleanText,
+    textoOriginal: cleanText,
+    setor: detectSetor(cleanText),
+    categoria: detectCategoria(cleanText),
+    feito: suggestActivities(cleanText),
+    observacoesTecnicas: suggestTechnicalNotes(cleanText),
+    status: "Caixa de entrada",
+    origem: source
   };
+}
+
+function extractTitle(text) {
+  const firstChunk = text.split(/[.,;]/).find(Boolean) || text;
+  const title = firstChunk.trim().slice(0, 86);
+
+  return sentenceCase(title || "Demanda rápida");
 }
 
 function detectSetor(text) {
@@ -993,6 +1019,73 @@ function detectSetor(text) {
   const found = sectors.find(([, aliases]) => aliases.some((alias) => normalized.includes(normalizeText(alias))));
 
   return found ? found[0] : "Outros";
+}
+
+function detectCategoria(text) {
+  const normalized = normalizeText(text);
+  const categories = [
+    ["Internet/Wi-Fi", ["wifi", "wi-fi", "internet", "rede sem fio", "sinal"]],
+    ["Rede", ["rede", "cabo de rede", "switch", "roteador", "ip"]],
+    ["Impressora", ["impressora", "imprimir", "toner", "ricoh", "brother", "hp"]],
+    ["Computador", ["computador", "pc", "notebook", "monitor", "mouse", "teclado"]],
+    ["Sistema", ["sistema", "login", "senha", "acesso", "erro no sistema"]],
+    ["Chromebook", ["chromebook", "chrome book"]],
+    ["Sala de Prova", ["sala de prova", "prova"]],
+    ["Manutenção", ["manutencao", "manutenção", "conserto", "arrumar", "porta", "cadeira", "mesa"]],
+    ["Infraestrutura", ["infraestrutura", "lampada", "lâmpada", "tomada", "iluminacao", "iluminação", "energia"]]
+  ];
+
+  const found = categories.find(([, aliases]) => aliases.some((alias) => normalized.includes(normalizeText(alias))));
+
+  return found ? found[0] : "Outros";
+}
+
+function suggestActivities(text) {
+  const normalized = normalizeText(text);
+  const actionWords = [
+    "fui",
+    "testei",
+    "troquei",
+    "ajustei",
+    "reiniciei",
+    "arrumei",
+    "verifiquei",
+    "configurei",
+    "instalei",
+    "limpei",
+    "consertei"
+  ];
+
+  return actionWords.some((word) => normalized.includes(word)) ? sentenceCase(text) : "";
+}
+
+function suggestTechnicalNotes(text) {
+  const normalized = normalizeText(text);
+  const technicalWords = ["ip", "rede", "cabo", "roteador", "switch", "tomada", "wifi", "wi-fi", "impressora"];
+
+  return technicalWords.some((word) => normalized.includes(word)) ? sentenceCase(text) : "";
+}
+
+function getSelectedPhotoCount(formData) {
+  if (formData.get("possuiEvidencia") !== "on") {
+    return 0;
+  }
+
+  const extra = Number(formData.get("quantidadeFotosExtra"));
+  const selected = Number(formData.get("quantidadeFotos"));
+
+  return extra >= 5 ? extra : selected || 1;
+}
+
+function setPhotoCount(value) {
+  const count = Number(value || 0);
+  const radios = demandForm.querySelectorAll('input[name="quantidadeFotos"]');
+
+  radios.forEach((radio) => {
+    radio.checked = Number(radio.value) === count && count <= 4;
+  });
+
+  demandForm.quantidadeFotosExtra.value = count > 4 ? count : "";
 }
 
 function appendText(currentValue, text) {
