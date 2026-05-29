@@ -931,6 +931,42 @@ dd {
   font-weight: 760;
 }
 
+.save-toast {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: rgba(18, 18, 30, 0.36);
+  padding: 20px;
+}
+
+.save-toast[hidden] {
+  display: none;
+}
+
+.save-toast-card {
+  display: grid;
+  gap: 8px;
+  width: min(420px, 100%);
+  border: 1px solid var(--border-soft);
+  border-radius: 28px;
+  background: var(--surface-raised);
+  box-shadow: 0 24px 70px rgba(12, 12, 22, 0.34);
+  padding: 28px;
+  text-align: center;
+}
+
+.save-toast-card strong {
+  color: var(--text);
+  font-size: 1.35rem;
+  line-height: 1.3;
+}
+
+.save-toast-card span {
+  color: var(--muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

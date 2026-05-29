@@ -58,6 +58,7 @@ const editVoiceButton = document.querySelector("#edit-voice-button");
 const voiceTarget = document.querySelector("#voice-target");
 const timelineList = document.querySelector("#timeline-list");
 const toast = document.querySelector("#toast");
+const saveToast = document.querySelector("#save-toast");
 
 let demandas = loadDemandas();
 let editingDemandId = null;
@@ -98,8 +99,10 @@ demandForm.addEventListener("submit", (event) => {
 
   saveDemandas();
   renderBoard();
-  closeEditPanel();
-  showToast("Alterações salvas");
+  showSaveConfirmation(() => {
+    closeEditPanel();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 });
 
 [searchInput, statusFilter, categoryFilter, priorityFilter].forEach((field) => {
@@ -973,9 +976,10 @@ function registerQuickDemand(rawText, source) {
   demandas.unshift(createDemand(demandValues));
   saveDemandas();
   renderBoard();
-  quickForm.reset();
-  quickTitleInput.focus();
-  showToast(source === "voz" ? "Registro por voz salvo" : "Demanda registrada com sucesso");
+  showSaveConfirmation(() => {
+    quickForm.reset();
+    quickTitleInput.focus();
+  });
 }
 
 function createDemandFromRawText(rawText, source) {
@@ -1270,6 +1274,19 @@ function showToast(message) {
   showToast.timeout = window.setTimeout(() => {
     toast.hidden = true;
   }, 2200);
+}
+
+function showSaveConfirmation(afterClose) {
+  saveToast.hidden = false;
+
+  window.clearTimeout(showSaveConfirmation.timeout);
+  showSaveConfirmation.timeout = window.setTimeout(() => {
+    saveToast.hidden = true;
+
+    if (typeof afterClose === "function") {
+      afterClose();
+    }
+  }, 2000);
 }
 
 function applySavedTheme() {
